@@ -57,18 +57,38 @@ void main() {
       final queryHandlerThree = QueryThreeHandlerOne();
 
       // Act & Assert
-      expect(
-          () => Orchestrator.I
-              .registerQueryHandler<QueryOne, String>(queryHandlerOne),
+      expect(() => Orchestrator.I.registerQueryHandler(queryHandlerOne),
           returnsNormally);
-      expect(
-          () => Orchestrator.I
-              .registerQueryHandler<QueryTwo, int>(queryHandlerTwo),
+      expect(() => Orchestrator.I.registerQueryHandler(queryHandlerTwo),
           returnsNormally);
-      expect(
-          () => Orchestrator.I
-              .registerQueryHandler<QueryThree, int>(queryHandlerThree),
+      expect(() => Orchestrator.I.registerQueryHandler(queryHandlerThree),
           returnsNormally);
+    });
+  });
+
+  group('Execution tests', () {
+    test('Send Query - Expect QueryHandler not registered', () {
+      // Arrange
+      final query = QueryOne('test');
+
+      // Act & Assert
+      expect(() => Orchestrator.I.send(query), throwsA(isA<StateError>()));
+    });
+
+    test('QueryHandler gets executed correctly - Expect returned value', () {
+      // Arrange
+      final query = QueryOne('test');
+      final queryHandler = QueryOneHandlerOne();
+      Orchestrator.I.registerQueryHandler(queryHandler);
+
+      // Act
+      final result = Orchestrator.I.send(query);
+
+      // Assert
+      expect(
+        result,
+        isA<Future<String>>(),
+      );
     });
   });
 }

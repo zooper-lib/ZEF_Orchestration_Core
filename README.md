@@ -1,39 +1,78 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# zef_orchestration_core
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+This Dart library provides a flexible and efficient way to handle and orchestrate requests using a command and query pattern. It's designed to facilitate the separation of command and query operations, enabling clear and maintainable code structures for complex applications.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- Generic Request Handling: Define request handlers that process specific types of requests and return corresponding results.
+- Command and Query Separation: Separate handling of command and query operations for clear distinction between actions that change state and those that retrieve data.
+- Asynchronous Support: Built-in support for asynchronous operations, enabling non-blocking I/O operations.
+- Singleton Orchestrator: Central orchestrator instance to manage command and query handlers, ensuring a single point of orchestration.
 
-## Getting started
+## Getting Started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+### Installation
 
-## Usage
+To integrate this library into your Dart or Flutter project, add the following dependency to your `pubspec.yaml` file:
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
-
-```dart
-const like = 'sample';
+```yaml
+dependencies:
+  your_library_name: latest_version
 ```
 
-## Additional information
+## Quick Start
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+### Initializing the Orchestrator
+
+Before using the orchestrator, initialize it with an appropriate adapter:
+
+```dart
+void main() {
+  OrchestratorBuilder()
+    .withAdapter(YourCustomOrchestratorAdapter())
+    .build();
+}
+```
+
+### Defining Requests and Handlers
+
+Create your command and query requests along with their respective handlers. Each handler should implement the corresponding abstract handler class:
+
+```dart
+class SampleCommand extends Command {
+  // Implementation details
+}
+
+class SampleCommandHandler extends CommandHandler<SampleCommand> {
+  @override
+  Future<void> call(SampleCommand command) async {
+    // Command handling logic
+  }
+}
+```
+
+### Registering Handlers with the Orchestrator
+
+Register your command and query handlers with the orchestrator to enable their processing:
+
+```dart
+Orchestrator.I.registerCommandHandler(SampleCommandHandler());
+```
+
+### Using the Orchestrator to Send Commands and Queries
+
+Send commands and queries through the orchestrator and handle the results as needed:
+
+```dart
+await Orchestrator.I.publish(SampleCommand());
+// For queries with expected results
+var queryResult = await Orchestrator.I.send(SampleQuery());
+```
+
+## Advanced Usage
+
+For advanced scenarios, you can customize the OrchestratorAdapter or implement complex handler logic to cater to specific application requirements.
+
+## Contributing
+
+Contributions to this library are welcome. Please feel free to submit pull requests or open issues to discuss proposed changes or enhancements.

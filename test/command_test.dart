@@ -51,7 +51,7 @@ void main() {
   });
 
   group('Execution tests', () {
-    test('Publish CommandHandler - Expect CommandHandler not registered', () {
+    test('Publish Command - Expect CommandHandler not registered', () {
       // Arrange
       final command = CommandOne('test');
 

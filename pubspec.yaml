@@ -1,7 +1,16 @@
 name: zef_orchestration_core
-description: A starting point for Dart libraries or applications.
+description: A dart library that provides a flexible and efficient way to handle and orchestrate requests using a command and query pattern.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+homepage: https://www.zooper.dev
+repository: https://github.com/zooper-lib/ZEF_Orchestration_Core
+topics:
+  - orchestration
+  - cqrs
+  - eventing
+  - domain-driven-design
+  - ddd
+funding:
+  - https://buymeacoffee.com/zooperlib
 
 environment:
   sdk: ^3.0.5

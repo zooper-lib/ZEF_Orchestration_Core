@@ -40,7 +40,6 @@ class ConcreteOrchestratorAdapter implements OrchestratorAdapter {
     var handlers = _commandHandlers[request.runtimeType];
 
     if (handlers == null) {
-      // TODO: Return a result
       throw StateError(
           'No $CommandHandler has been registered for the command of type ${request.runtimeType}.');
     }
@@ -56,7 +55,6 @@ class ConcreteOrchestratorAdapter implements OrchestratorAdapter {
     var handler = _queryHandlers[request.runtimeType];
 
     if (handler == null) {
-      // TODO: Return a result
       throw StateError(
           'No $QueryHandler has been registered for the query of type ${request.runtimeType}.');
     }
