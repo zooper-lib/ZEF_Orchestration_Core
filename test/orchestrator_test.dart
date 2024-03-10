@@ -8,7 +8,7 @@ void main() {
     });
 
     test('Should return an instance of Orchestrator', () {
-      OrchestratorBuilder().withAdapter(ConcreteOrchestratorAdapter()).build();
+      OrchestratorBuilder().build();
 
       final instance = Orchestrator.I;
       expect(instance, isA<Orchestrator>());

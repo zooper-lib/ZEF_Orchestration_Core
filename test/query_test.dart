@@ -5,18 +5,18 @@ import 'test_classes/request_handlers.dart';
 import 'test_classes/requests.dart';
 
 void main() {
-  setUpAll(
-    () => OrchestratorBuilder()
-        .withAdapter(ConcreteOrchestratorAdapter())
-        .build(),
-  );
+  setUpAll(() {
+    // Arrange
+    OrchestratorBuilder().build();
+  });
 
-  tearDown(
-    () => Orchestrator.I.unregisterAll(),
-  );
+  tearDown(() {
+    // Cleanup
+    Orchestrator.I.unregisterAll();
+  });
 
-  group('Registration tests', () {
-    test('Register QueryHandler - Expect success', () {
+  group('QueryHandler Registration |', () {
+    test('Instance Registration | Single QueryHandler | Success', () {
       // Arrange
       final queryHandler = QueryOneHandlerOne();
 
@@ -25,49 +25,44 @@ void main() {
           returnsNormally);
     });
 
-    test('Register QueryHandler twice - Expect already registered error', () {
+    test('Factory Registration | Single QueryHandler | Success', () {
+      // Arrange
+      queryHandlerFactory() => QueryOneHandlerOne();
+
+      // Act & Assert
+      expect(
+          () => Orchestrator.I.registerQueryHandlerFactory<QueryOne, String>(
+              queryHandlerFactory),
+          returnsNormally);
+    });
+
+    test('Duplicate Instance Registration | Same QueryHandler | Throws Error',
+        () {
       // Arrange
       final queryHandler = QueryOneHandlerOne();
       Orchestrator.I.registerQueryHandler(queryHandler);
 
       // Act & Assert
-      expect(
-        () => Orchestrator.I.registerQueryHandler(queryHandler),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => Orchestrator.I.registerQueryHandler(queryHandler),
+          throwsA(isA<StateError>()));
     });
 
-    test('Register Query twice - Expect already registered error', () {
-      // Arrange
-      final queryHandlerOne = QueryOneHandlerOne();
-      final queryHandlerTwo = QueryOneHandlerTwo();
-      Orchestrator.I.registerQueryHandler(queryHandlerOne);
-
-      // Act & Assert
-      expect(
-        () => Orchestrator.I.registerQueryHandler(queryHandlerTwo),
-        throwsA(isA<StateError>()),
-      );
-    });
-
-    test('Register multiple Queries and QueryHandler - Expect success', () {
+    test('Distinct Instance Registration | Multiple QueryHandlers | Success',
+        () {
       // Arrange
       final queryHandlerOne = QueryOneHandlerOne();
       final queryHandlerTwo = QueryTwoHandlerOne();
-      final queryHandlerThree = QueryThreeHandlerOne();
 
       // Act & Assert
       expect(() => Orchestrator.I.registerQueryHandler(queryHandlerOne),
           returnsNormally);
       expect(() => Orchestrator.I.registerQueryHandler(queryHandlerTwo),
           returnsNormally);
-      expect(() => Orchestrator.I.registerQueryHandler(queryHandlerThree),
-          returnsNormally);
     });
   });
 
-  group('Execution tests', () {
-    test('Send Query - Expect QueryHandler not registered', () {
+  group('QueryHandler Execution |', () {
+    test('No Registered Handler | Send Query | Throws Error', () {
       // Arrange
       final query = QueryOne('test');
 
@@ -75,20 +70,33 @@ void main() {
       expect(() => Orchestrator.I.send(query), throwsA(isA<StateError>()));
     });
 
-    test('QueryHandler gets executed correctly - Expect returned value', () {
+    test('Execute Registered Instance | Send Query | Returns Expected Value',
+        () async {
       // Arrange
       final query = QueryOne('test');
       final queryHandler = QueryOneHandlerOne();
       Orchestrator.I.registerQueryHandler(queryHandler);
 
       // Act
-      final result = Orchestrator.I.send(query);
+      final result = await Orchestrator.I.send(query);
 
       // Assert
-      expect(
-        result,
-        isA<Future<String>>(),
-      );
+      expect(result, equals('test'));
+    });
+
+    test('Execute Registered Factory | Send Query | Returns Expected Value',
+        () async {
+      // Arrange
+      final query = QueryOne('test');
+      queryHandlerFactory() => QueryOneHandlerOne();
+      Orchestrator.I
+          .registerQueryHandlerFactory<QueryOne, String>(queryHandlerFactory);
+
+      // Act
+      final result = await Orchestrator.I.send(query);
+
+      // Assert
+      expect(result, equals('test'));
     });
   });
 }

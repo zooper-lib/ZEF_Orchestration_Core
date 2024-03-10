@@ -24,7 +24,15 @@ dependencies:
 
 ### Initializing the Orchestrator
 
-Before using the orchestrator, initialize it with an appropriate adapter:
+Before using the `Orchestrator`, initialize it:
+
+```dart
+void main() {
+  OrchestratorBuilder().build();
+}
+```
+
+If you have implemented a custom `OrchestratorAdapter`, you should initialize the `Orchestrator` with using it:
 
 ```dart
 void main() {
@@ -69,9 +77,16 @@ await Orchestrator.I.publish(SampleCommand());
 var queryResult = await Orchestrator.I.send(SampleQuery());
 ```
 
-## Advanced Usage
+## Registering Handlers with a factory
 
-For advanced scenarios, you can customize the OrchestratorAdapter or implement complex handler logic to cater to specific application requirements.
+You can also register your `RequestHandler` via a factory, so the instances won't be stored in memory. This can reduce the memory usage, but keep in mind that it can lead the decreased performance when sending or publish a request, as the `Orchestrator` tries to resolve an instance.
+However if you register your `RequestHandler` via dependency injection as a `Lazy`, the `RequestHandler` instance will be resolved at the first time it is needed. This decreases startup time and memory usage. So we recommend going that way.
+
+```dart
+Orchestrator.I.registerCommandHandlerFactory(() => SampleCommandHandler());
+```
+
+Note: this is now a factory, which directly returns an instance every time we send the appropriate `Command`.
 
 ## Contributing
 

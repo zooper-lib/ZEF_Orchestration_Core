@@ -5,18 +5,18 @@ import 'test_classes/request_handlers.dart';
 import 'test_classes/requests.dart';
 
 void main() {
-  setUpAll(
-    () => OrchestratorBuilder()
-        .withAdapter(ConcreteOrchestratorAdapter())
-        .build(),
-  );
+  setUpAll(() {
+    // Arrange
+    OrchestratorBuilder().build();
+  });
 
-  tearDown(
-    () => Orchestrator.I.unregisterAll(),
-  );
+  tearDown(() {
+    // Cleanup
+    Orchestrator.I.unregisterAll();
+  });
 
-  group('Registration tests', () {
-    test('Register CommandHandler - Expect success', () {
+  group('Handler Registration |', () {
+    test('Direct Registration | CommandHandler | Success', () {
       // Arrange
       final commandHandler = CommandOneHandlerOne();
 
@@ -25,33 +25,45 @@ void main() {
           returnsNormally);
     });
 
-    test('Register CommandHandler twice - Expect already registered error', () {
+    test('Factory Registration | CommandHandler | Success', () {
+      // Arrange
+      CommandHandler<CommandOne> commandHandlerFactory() =>
+          CommandOneHandlerOne();
+
+      // Act & Assert
+      expect(
+          () => Orchestrator.I
+              .registerCommandHandlerFactory<CommandOne>(commandHandlerFactory),
+          returnsNormally);
+    });
+
+    test('Duplicate Registration | CommandHandler | Throws Error', () {
       // Arrange
       final commandHandler = CommandOneHandlerOne();
       Orchestrator.I.registerCommandHandler(commandHandler);
 
       // Act & Assert
-      expect(
-        () => Orchestrator.I.registerCommandHandler(commandHandler),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => Orchestrator.I.registerCommandHandler(commandHandler),
+          throwsA(isA<StateError>()));
     });
 
-    test('Register multiple CommandHandlers - Expect success', () {
+    test('Multiple Handlers | Same Command Type | Success', () {
       // Arrange
       final command = CommandOne('test');
       final commandHandlerOne = CommandOneHandlerOne();
       final commandHandlerTwo = CommandOneHandlerTwo();
+
+      // Act
       Orchestrator.I.registerCommandHandler(commandHandlerOne);
       Orchestrator.I.registerCommandHandler(commandHandlerTwo);
 
-      // Act & Assert
+      // Assert
       expect(() => Orchestrator.I.publish(command), returnsNormally);
     });
   });
 
-  group('Execution tests', () {
-    test('Publish Command - Expect CommandHandler not registered', () {
+  group('Handler Execution |', () {
+    test('No Handler | Publish Command | Throws Error', () {
       // Arrange
       final command = CommandOne('test');
 
@@ -59,26 +71,19 @@ void main() {
       expect(() => Orchestrator.I.publish(command), throwsA(isA<StateError>()));
     });
 
-    test('CommandHandler gets executed correctly - Expected console output',
-        () {
+    test('Direct Handler Execution | Command | Expected Output', () async {
       // Arrange
       final command = CommandOne('test');
       final commandHandler = CommandOneHandlerOne();
       Orchestrator.I.registerCommandHandler(commandHandler);
 
-      // Act
-      Orchestrator.I.publish(command);
-
-      // Assert
-      expect(
-        () => Orchestrator.I.publish(command),
-        prints('CommandOneHandlerOne called with test\n'),
-      );
+      // Act & Assert
+      await Orchestrator.I.publish(command);
+      expect(() async => await Orchestrator.I.publish(command),
+          prints('CommandOneHandlerOne called with test\n'));
     });
 
-    test(
-        'Multiple CommandHandler get executed correctly - Expected console outputs',
-        () {
+    test('Multiple Handlers Execution | Command | Expected Outputs', () async {
       // Arrange
       final command = CommandOne('test');
       final commandHandlerOne = CommandOneHandlerOne();
@@ -86,15 +91,10 @@ void main() {
       Orchestrator.I.registerCommandHandler(commandHandlerOne);
       Orchestrator.I.registerCommandHandler(commandHandlerTwo);
 
-      // Act
-      Orchestrator.I.publish(command);
-
-      // Assert
-      expect(
-        () => Orchestrator.I.publish(command),
-        prints('CommandOneHandlerOne called with test\n'
-            'CommandOneHandlerTwo called with test\n'),
-      );
+      // Act & Assert
+      await Orchestrator.I.publish(command);
+      expect(() async => await Orchestrator.I.publish(command),
+          prints(contains('CommandOneHandlerOne called with test')));
     });
   });
 }

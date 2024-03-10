@@ -1,3 +1,5 @@
+import 'package:zef_orchestration_core/src/default_orchestrator_adapter.dart';
+
 import 'orchestrator_adapter.dart';
 import 'request.dart';
 import 'request_handler.dart';
@@ -21,7 +23,7 @@ class Orchestrator {
   static Orchestrator get instance {
     if (_instance == null) {
       throw StateError(
-          '$Orchestrator must be initialized using the $OrchestratorBuilder before accessing the instance.');
+          'Orchestrator must be initialized using the OrchestratorBuilder before accessing the instance.');
     }
 
     return _instance!;
@@ -40,37 +42,51 @@ class Orchestrator {
 
   /// Registers a [QueryHandler] within the [Orchestrator].
   ///
-  /// This method delegates the registration of a query handler to the underlying [OrchestratorAdapter]. It is crucial to note that the orchestrator supports only one handler per query type. If a handler for a specific query type is already registered, attempting to register another handler for the same query type will replace the existing one.
+  /// This method delegates the registration of a query handler to the underlying [OrchestratorAdapter].
+  /// It supports only one handler per query type to ensure a single, unambiguous handler for each query type.
   ///
-  /// This design ensures that each query type has a single, unambiguous handler responsible for processing it, thereby avoiding conflicts or inconsistencies that could arise from having multiple handlers for the same query type.
-  ///
-  /// - [handler]: The [QueryHandler] instance to be registered. This handler will be invoked to process queries of the corresponding type.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// Orchestrator.I.registerQueryHandler<YourSpecificQueryType, YourQueryResultType>(YourQueryHandler());
-  /// ```
+  /// - [handler]: The [QueryHandler] instance to be registered for processing queries of the corresponding type.
   Future<void> registerQueryHandler<TQuery extends Query<TResult>, TResult>(
           QueryHandler<TQuery, TResult> handler) =>
       _adapter.registerQueryHandler(handler);
 
+  /// Registers a factory function to create a [CommandHandler] within the [Orchestrator].
+  ///
+  /// This method allows for deferred instantiation of the handler, beneficial for optimizing resource usage and
+  /// handling complex initialization scenarios.
+  ///
+  /// - [handlerFactory]: The factory function that, when called, will create an instance of the [CommandHandler].
+  Future<void> registerCommandHandlerFactory<TCommand extends Command>(
+          CommandHandler<TCommand> Function() handlerFactory) =>
+      _adapter.registerCommandHandlerFactory(handlerFactory);
+
+  /// Registers a factory function to create a [QueryHandler] within the [Orchestrator].
+  ///
+  /// Similar to command handler factories, this allows deferred creation of query handlers, providing flexibility
+  /// in handling initialization and dependencies.
+  ///
+  /// - [handlerFactory]: The factory function that, when called, will create an instance of the [QueryHandler].
+  Future<void>
+      registerQueryHandlerFactory<TQuery extends Query<TResult>, TResult>(
+              QueryHandler<TQuery, TResult> Function() handlerFactory) =>
+          _adapter.registerQueryHandlerFactory(handlerFactory);
+
   /// Publishes a [Command] through the [Orchestrator].
   ///
-  /// This method delegates the [Command] publishing to the underlying [OrchestratorAdapter].
-  /// - [request]: The [Command] to be published.
+  /// This method locates the appropriate [CommandHandler] and invokes it to process the command.
+  /// - [request]: The [Command] to be processed.
   Future<void> publish(Command request) => _adapter.publish(request);
 
   /// Sends a [Query] through the [Orchestrator] and awaits a result.
   ///
-  /// This method delegates the [Query] sending to the underlying [OrchestratorAdapter].
-  /// - [request]: The [Query] to be sent.
-  /// Returns the result of the query execution.
+  /// This method finds the suitable [QueryHandler] and invokes it, returning the result of the query execution.
+  /// - [request]: The [Query] to be processed.
   Future<TResult> send<TResult>(Query<TResult> request) =>
       _adapter.send(request);
 
   /// Unregisters all [RequestHandler] from the [Orchestrator].
   ///
-  /// This method delegates the unregistration to the underlying [OrchestratorAdapter].
+  /// This method clears all registered command and query handlers, resetting the orchestrator's state.
   Future<void> unregisterAll() => _adapter.unregisterAll();
 }
 
@@ -79,7 +95,7 @@ class Orchestrator {
 /// This builder ensures that an [Orchestrator] is properly configured with an [OrchestratorAdapter]
 /// before it is used.
 class OrchestratorBuilder {
-  OrchestratorAdapter? _adapter;
+  OrchestratorAdapter _adapter = DefaultOrchestratorAdapter();
 
   /// Sets the [OrchestratorAdapter] for the [Orchestrator] being built.
   ///
@@ -99,11 +115,6 @@ class OrchestratorBuilder {
           '$Orchestrator has already been initialized and cannot be configured again.');
     }
 
-    if (_adapter == null) {
-      throw StateError(
-          'A $OrchestratorAdapter must be provided before building the $Orchestrator.');
-    }
-
-    Orchestrator._instance = Orchestrator._(_adapter!);
+    Orchestrator._instance = Orchestrator._(_adapter);
   }
 }

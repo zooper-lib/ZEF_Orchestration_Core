@@ -23,7 +23,7 @@ class SampleQueryHandler extends QueryHandler<SampleQuery, String> {
 
 void main() async {
   // Initialize the orchestrator with the simple adapter.
-  OrchestratorBuilder().withAdapter(ConcreteOrchestratorAdapter()).build();
+  OrchestratorBuilder().build();
 
   // Register command and query handlers.
   await Orchestrator.I.registerCommandHandler(SampleCommandHandler());
